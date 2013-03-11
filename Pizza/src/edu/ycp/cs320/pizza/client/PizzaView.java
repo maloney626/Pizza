@@ -21,8 +21,9 @@ public class PizzaView extends Composite implements ISubscriber {
 	private InlineLabel sizeLabel;
 	private InlineLabel toppingsLabel;
 	private ListBox sizeComboBox;
-	private ListBox availToppingsList;
 	private ListBox selectedToppingsList;
+	private ListBox availToppingsList;
+	private Button addToppingButton;
 	
 	public PizzaView() {
 		
@@ -41,69 +42,73 @@ public class PizzaView extends Composite implements ISubscriber {
 		
 		sizeComboBox = new ListBox();
 		layoutPanel.add(sizeComboBox);
-		layoutPanel.setWidgetLeftWidth(sizeComboBox, 139.0, Unit.PX, 173.0, Unit.PX);
+		layoutPanel.setWidgetLeftWidth(sizeComboBox, 114.0, Unit.PX, 173.0, Unit.PX);
 		layoutPanel.setWidgetTopHeight(sizeComboBox, 49.0, Unit.PX, 26.0, Unit.PX);
 		
 		selectedToppingsList = new ListBox();
-		selectedToppingsList.setMultipleSelect(true);
+
 		layoutPanel.add(selectedToppingsList);
-		layoutPanel.setWidgetLeftWidth(selectedToppingsList, 139.0, Unit.PX, 61.0, Unit.PX);
-		layoutPanel.setWidgetTopHeight(selectedToppingsList, 120.0, Unit.PX, 85.0, Unit.PX);
+		layoutPanel.setWidgetLeftWidth(selectedToppingsList, 114.0, Unit.PX, 102.0, Unit.PX);
+		layoutPanel.setWidgetTopHeight(selectedToppingsList, 96.0, Unit.PX, 177.0, Unit.PX);
 		selectedToppingsList.setVisibleItemCount(5);
 		
 		availToppingsList = new ListBox();
-		availToppingsList.setMultipleSelect(true);
 		layoutPanel.add(availToppingsList);
-		layoutPanel.setWidgetLeftWidth(availToppingsList, 366.0, Unit.PX, 61.0, Unit.PX);
-		layoutPanel.setWidgetTopHeight(availToppingsList, 120.0, Unit.PX, 85.0, Unit.PX);
+		layoutPanel.setWidgetLeftWidth(availToppingsList, 325.0, Unit.PX, 110.0, Unit.PX);
+		layoutPanel.setWidgetTopHeight(availToppingsList, 96.0, Unit.PX, 177.0, Unit.PX);
 		availToppingsList.setVisibleItemCount(5);
 		
-		Button addToppingButton = new Button("New button");
+		addToppingButton = new Button("New button");
 		addToppingButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				handleAddToppings();
+				handleAddTopping();
 			}
 		});
 		addToppingButton.setText("<< Add");
 		layoutPanel.add(addToppingButton);
-		layoutPanel.setWidgetLeftWidth(addToppingButton, 206.0, Unit.PX, 81.0, Unit.PX);
-		layoutPanel.setWidgetTopHeight(addToppingButton, 119.0, Unit.PX, 27.0, Unit.PX);
+		layoutPanel.setWidgetLeftWidth(addToppingButton, 222.0, Unit.PX, 97.0, Unit.PX);
+		layoutPanel.setWidgetTopHeight(addToppingButton, 117.0, Unit.PX, 30.0, Unit.PX);
 		
 		Button removeToppingButton = new Button("New button");
 		removeToppingButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				handleRemoveToppings();
+				handleRemoveTopping();
 			}
 		});
 		removeToppingButton.setText("Remove >>");
 		layoutPanel.add(removeToppingButton);
-		layoutPanel.setWidgetLeftWidth(removeToppingButton, 206.0, Unit.PX, 81.0, Unit.PX);
-		layoutPanel.setWidgetTopHeight(removeToppingButton, 165.0, Unit.PX, 27.0, Unit.PX);
+		layoutPanel.setWidgetLeftWidth(removeToppingButton, 222.0, Unit.PX, 97.0, Unit.PX);
+		layoutPanel.setWidgetTopHeight(removeToppingButton, 188.0, Unit.PX, 30.0, Unit.PX);
 	}
 
-	protected void handleAddToppings() {
-		for (int i = 0; i < availToppingsList.getItemCount(); i++) {
-			if (availToppingsList.isItemSelected(i)) {
-				Topping t = Topping.valueOf(availToppingsList.getItemText(i));
-				model.addTopping(t);
-			}
+	protected void handleAddTopping() {
+		int index = availToppingsList.getSelectedIndex();
+		if (index >= 0) {
+			String s = availToppingsList.getItemText(index);
+			Topping t = Topping.valueOf(s);
+			model.addTopping(t);
+
 		}
 	}
 	
-	protected void handleRemoveToppings() {
-		for (int i = 0; i < selectedToppingsList.getItemCount(); i++) {
-			if (selectedToppingsList.isItemSelected(i)) {
-				Topping t = Topping.valueOf(selectedToppingsList.getItemText(i));
-				model.removeTopping(t);
-			}
+
+	protected void handleRemoveTopping() {
+		int index = selectedToppingsList.getSelectedIndex();
+		if (index >= 0) {
+			String s = selectedToppingsList.getItemText(index);
+			Topping t = Topping.valueOf(s);
+			model.removeTopping(t);
+
 		}
 	}
 
 	public void setModel(Pizza model) {
 		this.model = model;
+
+		this.model.subscribe(Pizza.Events.CHANGE_SIZE, this);
 		this.model.subscribe(Pizza.Events.ADD_TOPPING, this);
 		this.model.subscribe(Pizza.Events.REMOVE_TOPPING, this);
-		this.model.subscribe(Pizza.Events.CHANGE_SIZE, this);
+
 	}
 	
 	public void update() {
@@ -119,15 +124,17 @@ public class PizzaView extends Composite implements ISubscriber {
 		Size pizzaSize = model.getSize();
 		sizeComboBox.setSelectedIndex(pizzaSize.ordinal());
 		
-		// Clear list boxes
+
+		// Clear toppings list boxes
 		selectedToppingsList.clear();
 		availToppingsList.clear();
 		
-		for (Topping topping : Topping.values()) {
-			if (model.getToppingList().contains(topping)) {
-				selectedToppingsList.addItem(topping.toString());
+		for (Topping t : Topping.values()) {
+			if (model.getToppingList().contains(t)) {
+				selectedToppingsList.addItem(t.toString());
 			} else {
-				availToppingsList.addItem(topping.toString());
+				availToppingsList.addItem(t.toString());
+
 			}
 		}
 	}
